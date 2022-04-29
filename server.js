@@ -7,10 +7,15 @@ const io = new Server(server);
 const cors = require("cors");
 app.use(cors());
 
-
+const users = {}
 io.on('connection', (socket) => {
-    console.log("NEW USER: ", socket.id);
+  socket.on("new-user", username => {
+    console.log("CONNECTION")
+    users[username] = socket.id
+    io.emit("users", users);
+  })
 });
+
 
 app.use(express.static('public'))
 

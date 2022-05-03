@@ -19,6 +19,7 @@ document.getElementById('canvasUpdate').addEventListener('click', function() {
     createCanvas();
     redraw();
 });
+
 document.getElementById('colorpicker').addEventListener('change', function() {
     currentColor = this.value;
 });
@@ -169,6 +170,7 @@ function store(x, y, s, c) {
         "color": c
     }
     linesArray.push(line);
+    sendDrawData(linesArray);
 }
 
 // ON MOUSE UP

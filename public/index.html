@@ -99,6 +99,16 @@ input {
     </div>
     <!-- USER TAB HERE -->
     <div id="users" style="float: right;"></div>
+
+    <div style="width: 600px; bottom: 0; right:0; position: fixed;">
+      <div style="display: flex;">
+        <h1>TIME : </h1>
+        <h1 id="timer"></h1>
+      </div>
+      <h1>GUESS HERE</h1>
+      <input type="text" id="guess-box">
+      <button id="submit-guess">SUBMIT</button>
+    </div>
   </body>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/graph.js"></script>

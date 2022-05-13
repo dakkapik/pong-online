@@ -14,35 +14,90 @@ const io = new Server(server,
 const cors = require("cors");
 app.use(cors());
 
+const TIME_LIMIT = 60
 const users = {}
+const queue = []
+
+let timer = TIME_LIMIT
+let currentRound = 0
+let word = ""
+let interval
 
 io.on('connection', (socket) => {
 
-  socket.on("new-user", username => {
-    console.log("CONNECTION")
+  const newUser = (username) => {
     users[username] = socket.id
-    io.emit("users", users);
-  })
+    queue.push(username)
 
-  socket.on("draw-input", (draw) => {
-    io.emit("draw-output", draw)
-  })
+    io.emit("users", users)
 
-  socket.on("disconnect", (reason) => handleDisconnect(socket, reason))
+    if (nextInQueue(username)) io.to(users[username]).emit("choose-word")
+  } 
 
+  const emitArray = (array) => io.emit("draw-output", array)
+  
+  const startGame = (w) => {
+    timer = TIME_LIMIT
+    word = w
+    interval = setInterval(()=>{
+      timer--
+      if(timer > 0){
+        io.emit("timer", timer)
+      } else {
+        currentRound ++
+        clearInterval(interval)
+        io.emit("times-up")
+        io.emit("draw-output",[])
+        io.emit("clear")
+        queue.forEach(player => {
+          if(nextInQueue(player)) io.to(users[player]).emit("choose-word")
+        })
+      }
+    }, 1000)
+  }
+
+  const makeGuess = (guess, username) => {
+    if(guess === word){
+      console.log(username, " won!")
+
+      currentRound ++
+
+      io.emit("win", username)
+      io.emit("draw-output", [])
+      io.emit("clear")
+      clearInterval(interval)
+
+      queue.forEach(player => {
+        if(nextInQueue(player)) io.to(users[player]).emit("choose-word")
+      })
+      
+    } else {
+      io.to(users[username]).emit("wrong")
+    }
+  }
+
+  const handleDisconnect = ( reason )=> {
+    Object.entries(users).forEach(([key, value]) => {
+      if(socket.id === value){
+        delete users[key]
+        console.log("USER: ", key, "disconnected, reason: ", reason)
+      }
+    })
+  }
+
+  socket.on("new-user", newUser)
+  socket.on("draw-input", emitArray)
+  socket.on("start-game", startGame)
+  socket.on("guess", makeGuess)
+  socket.on("disconnect", handleDisconnect)
 });
 
-function handleDisconnect (socket, reason) {
-  Object.entries(users).forEach(([key, value]) => {
-    if(socket.id === value){
-      delete users[key]
-      console.log("USER: ", key, "disconnected, reason: ", reason)
-    }
-  })
+function nextInQueue (user) {
+  if(queue[currentRound % queue.length] === user) return true
+  else return false
 }
 
 app.use(express.static('public'))
-
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });

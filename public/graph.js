@@ -9,6 +9,10 @@ currentSize = 5;
 var currentColor = "rgb(200,20,100)";
 var currentBg = "white";
 
+//CAN DRAW <-----------
+
+let isPlaying = false
+
 // INITIAL LAUNCH
 
 createCanvas();
@@ -152,7 +156,9 @@ function mousedown(canvas, evt) {
 
 function mousemove(canvas, evt) {
 
-    if(isMouseDown){
+    //CHECK IF PLAYING
+
+    if(isMouseDown && isPlaying){
         var currentPosition = getMousePos(canvas, evt);
         ctx.lineTo(currentPosition.x, currentPosition.y)
         ctx.stroke();
